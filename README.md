@@ -1,2 +1,3 @@
-# Data-Analysis
-A collection of jupyter notebooks explaining data analysis techniques with some examples.  
+# LEssons
+
+A collection of jupyter notebooks and other documents to explain/explore difference concepts in statistics, data science, machine learining, ...
