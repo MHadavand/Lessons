@@ -1,3 +1,3 @@
-# LEssons
+# Lessons
 
 A collection of jupyter notebooks and other documents to explain/explore difference concepts in statistics, data science, machine learining, ...
