@@ -104,6 +104,7 @@ venv.bak/
 
 # mkdocs documentation
 /site
+DataAnalysis/build
 
 # mypy
 .mypy_cache/
