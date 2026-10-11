@@ -15,6 +15,7 @@ from datetime import date
 from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
+from pypdf.annotations import Link
 from pypdf.generic import Fit
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -48,7 +49,11 @@ def page_pdf(draw) -> PdfReader:
 
 
 def cover_pages(title, chapters, page_numbers):
-    """Contents page(s): chapter and section names with their page numbers."""
+    """Contents page(s): chapter and section names with their page numbers.
+
+    Returns the rendered pages and a list of (cover_page_index, rect, target_page) link
+    areas, one per contents line; target_page is 1-based in the final document.
+    """
     w, h = letter
     lines = []
     for num, (name, pdfs) in enumerate(chapters, 1):
@@ -68,9 +73,11 @@ def cover_pages(title, chapters, page_numbers):
     c.drawString(inch, y, f"{len(chapters)} chapters, {total} sections - compiled {date.today().isoformat()}")
     c.setFillColor(colors.black)
     y -= 0.5 * inch
+    links, cover_page = [], 0
     for kind, text, page in lines:
         if y < inch:
             c.showPage()
+            cover_page += 1
             y = h - inch
         if kind == "chapter":
             y -= 0.12 * inch
@@ -83,11 +90,13 @@ def cover_pages(title, chapters, page_numbers):
             indent = inch + 0.3 * inch
         c.drawString(indent, y, text[:80])
         c.drawRightString(w - inch, y, str(page))
+        # Clickable area spanning the whole line, from the title to the page number.
+        links.append((cover_page, (indent - 2, y - 4, w - inch + 2, y + 12), page))
         y -= 0.24 * inch if kind == "section" else 0.3 * inch
     c.showPage()
     c.save()
     buf.seek(0)
-    return PdfReader(buf)
+    return PdfReader(buf), links
 
 
 def divider(num, name, pdfs):
@@ -129,7 +138,7 @@ def compile_notes(root: Path, output: Path, title: str) -> int:
     n_cover = 1
     while True:  # contents may spill onto extra pages; re-layout until stable
         numbers = layout(n_cover)
-        cover = cover_pages(title, chapters, numbers)
+        cover, links = cover_pages(title, chapters, numbers)
         if len(cover.pages) == n_cover:
             break
         n_cover = len(cover.pages)
@@ -148,6 +157,10 @@ def compile_notes(root: Path, output: Path, title: str) -> int:
             for p in readers[pdf].pages:
                 writer.add_page(p)
             writer.add_outline_item(pdf.stem, first, parent=chapter_bm, fit=Fit.fit())
+
+    # Make every contents line a link to its chapter/section page.
+    for cover_page, rect, target in links:
+        writer.add_annotation(cover_page, Link(rect=rect, target_page_index=target - 1, fit=Fit.fit()))
 
     writer.add_metadata({"/Title": title, "/Subject": "Compiled notes"})
     writer.page_mode = "/UseOutlines"  # open with the bookmarks sidebar
