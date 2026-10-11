@@ -118,3 +118,10 @@ examples/temp
 CleanUp.bat
 *.json
 ML/ANN/animation.gif
+
+# macOS
+.DS_Store
+
+# MyNotes: keep only the compiled notes PDF
+MyNotes/**/*.pdf
+!MyNotes/notes_compiled.pdf
