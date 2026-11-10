@@ -125,3 +125,4 @@ ML/ANN/animation.gif
 # MyNotes: keep only the compiled notes PDF
 MyNotes/**/*.pdf
 !MyNotes/notes_compiled.pdf
+!MyNotes/ProjectNotes/*.pdf
